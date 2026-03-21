@@ -1,0 +1,5 @@
+This is a valid test file for upload testing.
+Created by the Expand Testing Playwright Framework.
+File size is intentionally kept small (under 500KB).
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.

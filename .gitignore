@@ -1,0 +1,11 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+allure-results/
+allure-report/
+blob-report/
+.auth/
+*.env
+!.env.example
+src/fixtures/files/large-file.txt

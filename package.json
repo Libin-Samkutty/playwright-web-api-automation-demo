@@ -1,0 +1,41 @@
+{
+  "name": "expand-testing-playwright-framework",
+  "version": "1.0.0",
+  "description": "Production-grade Playwright framework for practice.expandtesting.com — UI + API automation",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:smoke": "npx playwright test --grep @smoke",
+    "test:critical": "npx playwright test --grep '@smoke|@critical'",
+    "test:regression": "npx playwright test --grep '@smoke|@critical|@regression'",
+    "test:extended": "npx playwright test",
+    "test:api": "npx playwright test tests/api/",
+    "test:ui": "npx playwright test --ignore-glob='tests/api/**'",
+    "test:chromium": "npx playwright test --project=chromium",
+    "test:firefox": "npx playwright test --project=firefox",
+    "test:webkit": "npx playwright test --project=webkit",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "report": "npx playwright show-report",
+    "report:allure:generate": "npx allure generate allure-results -o allure-report --clean",
+    "report:allure:open": "npx allure open allure-report",
+    "report:allure": "npm run report:allure:generate && npm run report:allure:open",
+    "trace": "npx playwright show-trace",
+    "lint": "tsc --noEmit",
+    "generate:test-files": "npx ts-node scripts/generate-test-files.ts",
+    "setup": "npx playwright install --with-deps && npm run generate:test-files"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.3.0",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.10.5",
+    "allure-commandline": "^2.32.0",
+    "allure-playwright": "^3.0.7",
+    "typescript": "^5.7.3"
+  }
+}
