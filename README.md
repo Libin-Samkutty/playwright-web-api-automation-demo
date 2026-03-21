@@ -68,6 +68,156 @@ npx playwright test --trace on
 
 ---
 
+## Re-running Failed Tests
+
+```bash
+# Re-run only the tests that failed in the last run (Playwright 1.47+)
+npx playwright test --last-failed
+
+# Re-run failed tests on a specific browser
+npx playwright test --last-failed --project=chromium
+
+# Re-run with increased retries for flaky investigation
+npx playwright test --last-failed --retries=3
+```
+
+> Playwright writes `.last-run.json` to `test-results/` after every run. `--last-failed` reads this file to determine which tests to re-run. This file is gitignored and local to your machine.
+
+---
+
+## Filtering & Selection
+
+```bash
+# Run tests matching a title pattern (string or regex)
+npx playwright test --grep "login"
+npx playwright test --grep "/drag.*drop/i"
+
+# Exclude tests matching a pattern
+npx playwright test --grep-invert @extended
+
+# Run a specific test by title (exact substring match)
+npx playwright test -g "should login with valid credentials"
+
+# List all tests without running them (dry run)
+npx playwright test --list
+
+# Run tests in a specific directory
+npx playwright test tests/api/
+```
+
+---
+
+## Execution Control
+
+```bash
+# Run in headed mode (visible browser)
+npx playwright test --headed
+
+# Control number of parallel workers
+npx playwright test --workers=4
+npx playwright test --workers=1   # serial execution
+
+# Override test timeout (ms)
+npx playwright test --timeout=60000
+
+# Disable retries (useful for local debugging)
+npx playwright test --retries=0
+
+# Stop after first failure
+npx playwright test --max-failures=1
+
+# Run tests in a repeating loop (useful for flaky detection)
+npx playwright test --repeat-each=5
+```
+
+---
+
+## Sharding (Distributed CI)
+
+Split the test suite across multiple machines or CI jobs:
+
+```bash
+# Split into 3 shards — run each on a separate machine
+npx playwright test --shard=1/3
+npx playwright test --shard=2/3
+npx playwright test --shard=3/3
+```
+
+> Combine with `--project` to shard per browser. The GitHub Actions workflow in this repo uses sharding for the nightly regression run.
+
+---
+
+## Mobile & Device Emulation
+
+```bash
+# Emulate a specific device
+npx playwright test --project="Mobile Chrome"
+npx playwright test --project="Mobile Safari"
+```
+
+To add device projects, extend `playwright.config.ts`:
+
+```ts
+{ name: 'Mobile Chrome', use: { ...devices['Pixel 5'] } },
+{ name: 'Mobile Safari', use: { ...devices['iPhone 13'] } },
+```
+
+---
+
+## Test Artifacts
+
+Artifact behaviour is configured in `playwright.config.ts` (`trace: 'on-first-retry'`, `screenshot: 'only-on-failure'`, `video: 'on-first-retry'`). Override at runtime:
+
+```bash
+# Always capture traces
+npx playwright test --trace on
+
+# Always record video
+npx playwright test --video on
+
+# Always take screenshots
+npx playwright test --screenshot on
+
+# Retain artifacts only on failure
+npx playwright test --trace retain-on-failure
+npx playwright test --video retain-on-failure
+```
+
+---
+
+## Codegen — Record New Tests
+
+```bash
+# Open a browser and record interactions as Playwright code
+npx playwright codegen https://practice.expandtesting.com
+
+# Record into a specific output file
+npx playwright codegen --output tests/recorded.spec.ts https://practice.expandtesting.com
+
+# Emulate a device during recording
+npx playwright codegen --device="iPhone 13" https://practice.expandtesting.com
+```
+
+---
+
+## Reporter Selection
+
+```bash
+# Use the built-in HTML reporter only
+npx playwright test --reporter=html
+
+# Use dot reporter for minimal CI output
+npx playwright test --reporter=dot
+
+# Use line reporter
+npx playwright test --reporter=line
+
+# Run multiple reporters together
+npx playwright test --reporter=list,html
+```
+
+---
+
 ## Test Prioritisation
 
 | Priority     | Tag         | Run Condition              | Target Duration |
@@ -201,17 +351,23 @@ npx playwright test
 ## Debugging
 
 ```bash
-# Debug mode (headed with DevTools)
+# Debug mode (step through test with Playwright Inspector)
 npx playwright test --debug
 
-# UI mode (interactive)
+# Debug a specific test
+npx playwright test tests/auth/login.spec.ts --debug
+
+# UI mode (interactive — run, filter, watch, inspect traces)
 npx playwright test --ui
 
-# Trace on failure
+# Trace on failure (open with: npx playwright show-trace)
 npx playwright test --trace retain-on-failure
 
-# Verbose logging
+# Verbose Playwright API logging
 DEBUG=pw:api npx playwright test
+
+# Verbose including browser console
+DEBUG=pw:api,pw:browser npx playwright test
 ```
 
 ---
