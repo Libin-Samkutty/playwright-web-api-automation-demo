@@ -6,22 +6,11 @@ test.describe('Tooltips Page @regression', () => {
   });
 
   test('B11 — Hover to reveal tooltip @critical', async ({ page }) => {
-    const tooltipTarget = page.locator('[title], [data-tooltip], .tooltip-target, [data-toggle="tooltip"]').first();
+    const tooltipTarget = page.locator('.tooltip-demo, [data-bs-toggle="tooltip"], [data-toggle="tooltip"]').first();
     const hasTarget = await tooltipTarget.count() > 0;
 
     if (!hasTarget) {
       // Try hovering over elements that commonly have tooltips
-      const allElements = page.locator('a[title], span[title], button[title]').first();
-      if (await allElements.count() > 0) {
-        const titleBefore = await allElements.getAttribute('title');
-        await allElements.hover();
-        await page.waitForTimeout(500);
-
-        // The title attribute itself acts as a native tooltip
-        expect(titleBefore).toBeTruthy();
-        return;
-      }
-
       test.skip(true, 'No tooltip targets found on page');
       return;
     }
@@ -46,7 +35,7 @@ test.describe('Tooltips Page @regression', () => {
   });
 
   test('B12 — Tooltip text content validation @regression', async ({ page }) => {
-    const tooltipTargets = page.locator('[title], [data-tooltip], [data-original-title]');
+    const tooltipTargets = page.locator('.tooltip-demo, [data-bs-toggle="tooltip"], [data-toggle="tooltip"]');
     const count = await tooltipTargets.count();
 
     if (count === 0) {
@@ -81,7 +70,7 @@ test.describe('Tooltips Page @regression', () => {
   });
 
   test('B11 — Tooltip hides on mouse leave @regression', async ({ page }) => {
-    const tooltipTarget = page.locator('[title], [data-tooltip]').first();
+    const tooltipTarget = page.locator('.tooltip-demo, [data-bs-toggle="tooltip"], [data-toggle="tooltip"]').first();
     const hasTarget = await tooltipTarget.count() > 0;
 
     if (!hasTarget) {

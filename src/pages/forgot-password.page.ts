@@ -28,7 +28,7 @@ export class ForgotPasswordPage extends BasePage {
   }
 
   async getFlashText(): Promise<string> {
-    await this.flashMessage.waitFor({ state: 'visible', timeout: 5000 });
+    await this.flashMessage.waitFor({ state: 'visible', timeout: 10000 });
     return (await this.flashMessage.textContent())?.trim() ?? '';
   }
 

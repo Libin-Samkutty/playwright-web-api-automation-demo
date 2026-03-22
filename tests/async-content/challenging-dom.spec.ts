@@ -43,14 +43,11 @@ test.describe('Challenging DOM Page @regression', () => {
       initialButtonTexts.push(text?.trim() || '');
     }
 
-    // Click the first button
+    // Click the first button — this mutates the DOM in-place (no navigation)
     await buttons.first().click();
-    await page.waitForLoadState('domcontentloaded');
 
-    // Verify the page is still functional after the click
-    const postClickButtons = page.getByRole('button');
-    const postClickCount = await postClickButtons.count();
-    expect(postClickCount).toBeGreaterThan(0);
+    // Use a retrying assertion — DOM regeneration can briefly return 0 on a point-in-time count()
+    await expect(page.getByRole('button').first()).toBeVisible();
 
     // The table should still be present
     await expect(page.locator('table')).toBeVisible();
