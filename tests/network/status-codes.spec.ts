@@ -6,17 +6,8 @@ test.describe('Status Codes Page @regression', () => {
   });
 
   test('N1 — Trigger and assert 200 OK @critical', async ({ page }) => {
-    const link200 = page.locator('a:has-text("200")');
-    await expect(link200).toBeVisible();
-
-    const responsePromise = page.waitForResponse(
-      (resp) => resp.url().includes('200') && resp.status() === 200
-    );
-
-    await link200.click();
-    const response = await responsePromise;
-
-    expect(response.status()).toBe(200);
+    const response = await page.goto('/status-codes/200', { waitUntil: 'domcontentloaded' });
+    expect(response?.status()).toBe(200);
     await expect(page.locator('body')).toContainText('200');
   });
 
@@ -36,34 +27,16 @@ test.describe('Status Codes Page @regression', () => {
   });
 
   test('N2 — Trigger and assert 404 Not Found @critical', async ({ page }) => {
-    const link404 = page.locator('a:has-text("404")');
-    await expect(link404).toBeVisible();
-
-    const responsePromise = page.waitForResponse(
-      (resp) => resp.url().includes('404')
-    );
-
-    await link404.click();
-    const response = await responsePromise;
-
-    expect(response.status()).toBe(404);
+    // WebKit shows a Google ad vignette that intercepts link clicks on this page.
+    // Navigate directly so we can also assert the actual HTTP status code.
+    const response = await page.goto('/status-codes/404', { waitUntil: 'domcontentloaded' });
+    expect(response?.status()).toBe(404);
     await expect(page.locator('body')).toContainText('404');
   });
 
   test('N3 — Trigger and assert 500 with graceful handling @regression', async ({ page }) => {
-    const link500 = page.locator('a:has-text("500")');
-    await expect(link500).toBeVisible();
-
-    const responsePromise = page.waitForResponse(
-      (resp) => resp.url().includes('500')
-    );
-
-    await link500.click();
-    const response = await responsePromise;
-
-    expect(response.status()).toBe(500);
-
-    // Page should display something — not an unhandled crash
+    const response = await page.goto('/status-codes/500', { waitUntil: 'domcontentloaded' });
+    expect(response?.status()).toBe(500);
     const bodyText = await page.textContent('body');
     expect(bodyText).toBeTruthy();
     expect(bodyText!.length).toBeGreaterThan(0);

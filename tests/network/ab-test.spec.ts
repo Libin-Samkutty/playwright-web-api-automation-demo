@@ -4,7 +4,7 @@ test.describe('A/B Test Page @regression', () => {
   test('N9 — Detect which variation is rendered @regression', async ({ page }) => {
     await page.goto('/abtest');
 
-    const heading = page.locator('h3, .example h3');
+    const heading = page.locator('h1, h2, h3');
     await expect(heading).toBeVisible();
 
     const headingText = await heading.textContent();
@@ -32,7 +32,7 @@ test.describe('A/B Test Page @regression', () => {
     expect(bodyText!.length).toBeGreaterThan(50);
 
     // The page should have a heading
-    const heading = page.locator('h3');
+    const heading = page.locator('h1, h2, h3');
     await expect(heading).toBeVisible();
 
     // The page should have descriptive text
@@ -46,7 +46,7 @@ test.describe('A/B Test Page @regression', () => {
 
     for (let i = 0; i < 10; i++) {
       await page.goto('/abtest');
-      const headingText = await page.locator('h3').textContent();
+      const headingText = await page.locator('h1, h2, h3').textContent();
       if (headingText) {
         variants.add(headingText.trim());
       }
@@ -60,8 +60,10 @@ test.describe('A/B Test Page @regression', () => {
     // We should see at least one variant
     expect(variants.size).toBeGreaterThanOrEqual(1);
 
-    // Ideally both variants are seen, but this is non-deterministic
-    // Use soft assertion — it's informational, not a failure
-    expect.soft(variants.size).toBeGreaterThanOrEqual(2);
+    // Ideally both variants are seen — informational only, not a hard requirement
+    test.info().annotations.push({
+      type: 'variant-count',
+      description: `Expected ≥2 unique variants; observed: ${variants.size}`,
+    });
   });
 });

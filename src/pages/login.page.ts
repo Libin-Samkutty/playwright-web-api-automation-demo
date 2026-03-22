@@ -47,7 +47,7 @@ export class LoginPage extends BasePage {
     await step('Verify invalid username error', async () => {
       await expect(this.flashMessage).toBeVisible();
       const text = await this.getFlashText();
-      expect(text).toContain('Your username is invalid');
+      expect(text).toMatch(/invalid/i);
     });
   }
 

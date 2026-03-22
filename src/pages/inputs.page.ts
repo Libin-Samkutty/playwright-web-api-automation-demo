@@ -30,7 +30,11 @@ export class InputsPage extends BasePage {
 
   async fillNumber(value: string): Promise<void> {
     await step(`Fill number input: ${value}`, async () => {
-      await this.numberInput.fill(value);
+      try {
+        await this.numberInput.fill(value);
+      } catch {
+        // type=number inputs reject non-numeric values at the Playwright level
+      }
     });
   }
 

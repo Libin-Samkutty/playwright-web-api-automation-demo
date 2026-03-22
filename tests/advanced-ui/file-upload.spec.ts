@@ -36,7 +36,7 @@ test.describe('File Upload Page @regression', () => {
     await fileInput.setInputFiles(validFilePath);
 
     // Click the upload button
-    const uploadButton = page.locator('button[type="submit"], #file-submit, input[type="submit"]');
+    const uploadButton = page.locator('button[type="submit"], #file-submit, input[type="submit"], button:has-text("Upload")');
     if (await uploadButton.isVisible()) {
       await uploadButton.click();
     }
@@ -49,7 +49,7 @@ test.describe('File Upload Page @regression', () => {
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles(oversizedFilePath);
 
-    const uploadButton = page.locator('button[type="submit"], #file-submit, input[type="submit"]');
+    const uploadButton = page.locator('button[type="submit"], #file-submit, input[type="submit"], button:has-text("Upload")');
     if (await uploadButton.isVisible()) {
       await uploadButton.click();
     }
@@ -72,8 +72,8 @@ test.describe('File Upload Page @regression', () => {
   });
 
   test('V7 — Upload via drag-and-drop zone @regression', async ({ page }) => {
-    const dropZone = page.locator('#drag-drop-upload, .dz-clickable, [class*="drop"]');
-    const hasDropZone = await dropZone.count() > 0;
+    const dropZone = page.locator('#drag-drop-upload, .dz-clickable, .dropzone, .drop-zone, [data-upload]');
+    const hasDropZone = await dropZone.first().isVisible().catch(() => false);
 
     if (!hasDropZone) {
       test.skip(true, 'No drag-and-drop upload zone found on page');
@@ -103,7 +103,7 @@ test.describe('File Upload Page @regression', () => {
   });
 
   test('V5 — No file selected — upload button state @regression', async ({ page }) => {
-    const uploadButton = page.locator('button[type="submit"], #file-submit, input[type="submit"]');
+    const uploadButton = page.locator('button[type="submit"], #file-submit, input[type="submit"], button:has-text("Upload")');
     const hasButton = await uploadButton.count() > 0;
 
     if (!hasButton) {
