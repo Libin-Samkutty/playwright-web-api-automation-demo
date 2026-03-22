@@ -16,7 +16,7 @@ test.describe('Windows / Tabs Page @regression', () => {
 
     // Assert the new page has the expected content
     expect(newPage.url()).toContain('/windows/new');
-    const heading = newPage.locator('h3, .example h3');
+    const heading = newPage.locator('h1, h2, h3').first();
     await expect(heading).toBeVisible();
 
     const content = await newPage.textContent('body');

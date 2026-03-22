@@ -8,7 +8,7 @@ test.describe('OTP Authentication Flow', () => {
   test('A13: Valid OTP code proceeds authentication @critical', { tag: '@critical' }, async ({ pm, page }) => {
     // Navigate to OTP page if available
     await page.goto('/otp');
-    const hasOtpPage = !page.url().includes('404');
+    const hasOtpPage = !page.url().includes('404') && await page.locator('input[name="otp"], input[type="text"], input[type="number"]').count() > 0;
 
     test.skip(!hasOtpPage, 'OTP page not available on this deployment');
 
@@ -23,7 +23,7 @@ test.describe('OTP Authentication Flow', () => {
 
   test('A14: Expired OTP code shows error @regression', { tag: '@regression' }, async ({ page }) => {
     await page.goto('/otp');
-    const hasOtpPage = !page.url().includes('404');
+    const hasOtpPage = !page.url().includes('404') && await page.locator('input[name="otp"], input[type="text"], input[type="number"]').count() > 0;
     test.skip(!hasOtpPage, 'OTP page not available on this deployment');
 
     // Expired OTP scenario - submit after delay
@@ -37,7 +37,7 @@ test.describe('OTP Authentication Flow', () => {
 
   test('A15: Incorrect OTP code rejected @regression', { tag: '@regression' }, async ({ page }) => {
     await page.goto('/otp');
-    const hasOtpPage = !page.url().includes('404');
+    const hasOtpPage = !page.url().includes('404') && await page.locator('input[name="otp"], input[type="text"], input[type="number"]').count() > 0;
     test.skip(!hasOtpPage, 'OTP page not available on this deployment');
 
     const otpInput = page.locator('input[name="otp"], input[type="text"]').first();

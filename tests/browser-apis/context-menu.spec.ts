@@ -36,7 +36,10 @@ test.describe('Context Menu Page @regression', () => {
     }
   });
 
-  test('B10 — Right-click produces expected result @regression', async ({ page }) => {
+  test('B10 — Right-click produces expected result @regression', async ({ page, browserName }) => {
+    // WebKit does not fire JS dialogs triggered from contextmenu events
+    test.skip(browserName === 'webkit', 'WebKit suppresses dialogs triggered from contextmenu events');
+
     let dialogCount = 0;
 
     page.on('dialog', async (dialog) => {
