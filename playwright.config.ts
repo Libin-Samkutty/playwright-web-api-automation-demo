@@ -3,6 +3,11 @@ import { ENV } from './src/config/env.config';
 
 export default defineConfig({
   testDir: './tests',
+  // Centralize visual regression baselines under screenshots/ instead of
+  // Playwright's default co-located `<spec>-snapshots/` folders per test
+  // file — keeps every baseline reviewable in one place.
+  snapshotDir: './screenshots',
+  snapshotPathTemplate: '{snapshotDir}/{testFileName}/{arg}{-projectName}{ext}',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
@@ -10,6 +15,10 @@ export default defineConfig({
   timeout: ENV.TIMEOUT,
   expect: {
     timeout: 10_000,
+    // Visual regression default tolerance — tight enough to catch real
+    // layout changes, wide enough to absorb antialiasing differences
+    // across CI environments. See docs/MIGRATION.md.
+    toHaveScreenshot: { maxDiffPixelRatio: 0.002 },
   },
 
   reporter: [

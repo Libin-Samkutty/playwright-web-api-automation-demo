@@ -93,6 +93,27 @@ jobs:
             test-results/
           retention-days: 7
 
+  docker-smoke:
+    name: Docker Smoke Validation
+    needs: smoke-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run smoke via Docker Compose
+        run: |
+          cd docker
+          docker compose up --build --exit-code-from playwright-tests playwright-tests
+
+      - name: Upload Docker run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-smoke-report
+          path: playwright-report/
+          retention-days: 7
+
   regression-tests:
     name: P2 Regression (Nightly)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -136,9 +157,22 @@ jobs:
             test-results/
           retention-days: 14
 
+      # Visual regression baselines are only ever generated here — on the
+      # real CI runner — never on a contributor's local machine (see
+      # docs/MIGRATION.md). Upload separately so a first-run failure's
+      # freshly-written screenshots can be reviewed and committed.
+      - name: Upload visual regression baselines
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines-${{ matrix.browser }}-${{ strategy.job-index }}
+          path: screenshots/
+          retention-days: 14
+          if-no-files-found: ignore
+
   extended-tests:
-    name: P3 Extended (Weekly)
-    if: github.event_name == 'schedule' && github.event.schedule == '0 4 * * 0'
+    name: P3 Extended (On-Demand)
+    if: github.event_name == 'workflow_dispatch'
     needs: regression-tests
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -172,7 +206,7 @@ jobs:
 
   generate-report:
     name: Generate Allure Report
-    needs: [critical-tests]
+    needs: [critical-tests, regression-tests]
     if: always()
     runs-on: ubuntu-latest
     steps:

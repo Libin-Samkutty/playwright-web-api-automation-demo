@@ -1,0 +1,47 @@
+services:
+  playwright-tests:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      CI: "true"
+      BASE_URL: https://practice.expandtesting.com
+      NOTES_API_URL: https://practice.expandtesting.com/notes/api
+    volumes:
+      - ../playwright-report:/app/playwright-report
+      - ../allure-results:/app/allure-results
+      - ../test-results:/app/test-results
+    command: >
+      npx playwright test --grep "@smoke|@critical" --project=chromium
+
+  # Separate services for full regression with sharding, one per shard —
+  # mirrors the CI matrix rather than duplicating a single all-in-one run.
+  playwright-tests-shard-1:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      CI: "true"
+      BASE_URL: https://practice.expandtesting.com
+      NOTES_API_URL: https://practice.expandtesting.com/notes/api
+    command: npx playwright test --project=chromium --shard=1/3
+
+  playwright-tests-shard-2:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      CI: "true"
+      BASE_URL: https://practice.expandtesting.com
+      NOTES_API_URL: https://practice.expandtesting.com/notes/api
+    command: npx playwright test --project=chromium --shard=2/3
+
+  playwright-tests-shard-3:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      CI: "true"
+      BASE_URL: https://practice.expandtesting.com
+      NOTES_API_URL: https://practice.expandtesting.com/notes/api
+    command: npx playwright test --project=chromium --shard=3/3
