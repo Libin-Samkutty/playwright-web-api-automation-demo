@@ -223,7 +223,7 @@ jobs:
           find artifacts -name "*.json" -path "*/allure-results/*" -exec cp {} allure-results-merged/ \;
 
       - name: Generate Allure report
-        uses: simple-elf/allure-report-action@v1.9
+        uses: simple-elf/allure-report-action@v1.14
         if: always()
         with:
           allure_results: allure-results-merged
