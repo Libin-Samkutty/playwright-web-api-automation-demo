@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { blockAdNetworks } from '../visual-regression/block-ads';
 
 test.describe('Broken Images Page @regression', () => {
   test.beforeEach(async ({ page }) => {
@@ -72,6 +73,14 @@ test.describe('Broken Images Page @regression', () => {
   });
 
   test('N6 — Network intercept broken image requests @regression', async ({ page }) => {
+    // The live site's ad/analytics scripts (AdSense, GA, socket.io polling)
+    // never go fully quiet, so `waitUntil: 'networkidle'` on reload was
+    // routinely hitting the test's 30s timeout under CI load — this test
+    // only cares about <img> responses, not full network silence, so
+    // blocking the ad noise and waiting for `load` is both correct and
+    // faster than networkidle ever was.
+    await blockAdNetworks(page);
+
     const imageResponses: { url: string; status: number }[] = [];
 
     // Intercept image requests
@@ -83,7 +92,8 @@ test.describe('Broken Images Page @regression', () => {
     });
 
     // Reload the page to capture image requests
-    await page.reload({ waitUntil: 'networkidle' });
+    await page.reload({ waitUntil: 'load' });
+    await page.waitForTimeout(500);
 
     // Verify that broken images correspond to non-200 responses
     const failedImages = imageResponses.filter((r) => r.status >= 400);

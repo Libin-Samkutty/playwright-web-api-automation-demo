@@ -1,6 +1,15 @@
 # Playwright Web & API Automation Framework
 
+[![Playwright Tests](https://github.com/Libin-Samkutty/playwright-web-api-automation-demo/actions/workflows/playwright.yml/badge.svg)](https://github.com/Libin-Samkutty/playwright-web-api-automation-demo/actions/workflows/playwright.yml)
+[![Allure Report](https://img.shields.io/badge/Allure-Report-orange)](https://libin-samkutty.github.io/playwright-web-api-automation-demo/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Production-grade test automation framework targeting [practice.expandtesting.com](https://practice.expandtesting.com/) — covering UI, API, network interception, browser-level APIs, and cross-layer hybrid validation.
+
+This is the destination of a migration off Robot Framework — see
+[`docs/MIGRATION.md`](docs/MIGRATION.md) for the architectural decision
+record, and [`robotframework-dashboard-ui-tests`](https://github.com/Libin-Samkutty/robotframework-dashboard-ui-tests)
+for the legacy side of the same story.
 
 ---
 
@@ -26,8 +35,13 @@ playwright-web-api-automation-demo/
 │   ├── non-deterministic/    # Typos page (resilient assertions)
 │   ├── notes-app/            # React Notes App E2E + hybrid tests
 │   ├── observability/        # Browser info, reporting validation
-│   └── ui-components/        # Checkboxes, radio buttons, alerts, windows
+│   ├── ui-components/        # Checkboxes, radio buttons, alerts, windows
+│   └── visual-regression/    # Playwright native screenshot-diff suite
 ├── fixtures/                 # Test files (uploads, schemas)
+├── docker/                   # Dockerfile, docker-compose, .dockerignore
+├── docs/
+│   └── MIGRATION.md          # Robot Framework → Playwright decision record
+├── Jenkinsfile                # Optional second CI orchestrator
 ├── playwright.config.ts      # Playwright configuration
 ├── package.json
 └── tsconfig.json
@@ -248,6 +262,7 @@ npx playwright test --reporter=list,html
 | Notes API             | 8          | CRUD, auth boundary, schema, performance                   |
 | Practice API          | 3          | Health, auth, schema                                       |
 | Observability         | 4          | Browser detection, Allure reporting                        |
+| Visual Regression     | 5          | Screenshot-diff on notes list, dynamic table, UI components, form errors |
 
 **Total: 100+ automated test cases**
 
@@ -283,6 +298,35 @@ Zod schemas validate API response contracts — catches field renames, type chan
 - Create via API → verify in UI
 - Demonstrates integration testing beyond unit/e2e boundaries
 
+### Visual Regression Testing
+Native Playwright `toHaveScreenshot()` diffing on the highest-risk,
+most change-sensitive UI surfaces (`tests/visual-regression/`) — catches
+the class of bug that passes every functional assertion because the DOM
+and its text are technically correct, while the visual result is wrong.
+Third-party ad network requests are blocked during these tests
+(`tests/visual-regression/block-ads.ts`) — the target site serves live,
+asynchronously-loading ads that otherwise shift page height between runs
+for reasons that have nothing to do with the page under test.
+
+No baseline images ship in this repo — per the CI-only-baseline rule
+below, the first CI run will intentionally fail with "a snapshot doesn't
+exist," write the actual screenshots as artifacts, and those become the
+committed baseline once reviewed. This is a one-time bootstrap step, not
+an ongoing one.
+
+- 0.2% pixel tolerance — tight enough for real layout changes, wide
+  enough to absorb antialiasing differences across environments.
+- Baselines are only ever generated on CI (Ubuntu) — never commit a
+  baseline generated on a local machine; font rendering differs enough
+  between OSes to produce false failures on every subsequent CI run.
+- Any intentional baseline update must include a before/after diff image
+  in the pull request.
+
+```bash
+npm run test:visual          # run the visual regression suite
+npm run test:visual:update   # regenerate baselines (CI only — see above)
+```
+
 ---
 
 ## Reporting
@@ -311,15 +355,37 @@ npx playwright show-trace test-results/trace.zip
 
 ---
 
+## Docker
+
+```bash
+cd docker
+
+# Smoke + critical tests in a single container
+docker compose up --build --exit-code-from playwright-tests playwright-tests
+
+# Full regression, sharded across 3 containers
+docker compose up --build playwright-tests-shard-1 playwright-tests-shard-2 playwright-tests-shard-3
+```
+
+The image (`docker/Dockerfile`) pins the Playwright base image version to
+match `@playwright/test` in `package.json`, so browsers and drivers can't
+drift out of sync with what's declared. Reports are mounted back to the
+host via volumes (`playwright-report/`, `allure-results/`, `test-results/`).
+
+---
+
 ## CI/CD Pipeline
 
-The GitHub Actions workflow implements a gated pipeline:
+The GitHub Actions workflow (`.github/workflows/playwright.yml`) implements a gated pipeline:
 
 - **Smoke Gate** — P0 tests on Chromium (must pass to proceed)
 - **Critical Tests** — P1 tests on Chromium + Firefox + WebKit (matrix)
-- **Regression** — Nightly, sharded across 3 workers per browser
-- **Extended** — Weekly, full suite
+- **Docker Smoke Validation** — smoke suite run via `docker compose`, validating the container setup itself is functional
+- **Regression** — On `workflow_dispatch` (nightly `cron` is present but commented out by default — a demo repo doesn't need a standing schedule burning Actions minutes; uncomment to activate), sharded across 3 workers per browser, includes the visual regression suite
+- **Extended** — On `workflow_dispatch`, full suite
 - **Allure Report** — Auto-generated and deployed to GitHub Pages
+
+A `Jenkinsfile` is also included at the repo root, running the same smoke/critical suite under a second CI orchestrator — demonstrating the pipeline isn't hard-wired to one platform.
 
 ---
 

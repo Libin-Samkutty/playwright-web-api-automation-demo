@@ -6,36 +6,32 @@ test.describe('Tooltips Page @regression', () => {
   });
 
   test('B11 — Hover to reveal tooltip @critical', async ({ page }) => {
-    const tooltipTarget = page.locator('.tooltip-demo, [data-bs-toggle="tooltip"], [data-toggle="tooltip"]').first();
+    // Bootstrap's tooltip plugin is initialized on the wrapping `.tooltip-demo`
+    // container as the delegate, but the container itself has no `title` and
+    // never triggers a tooltip — only its `[data-bs-toggle="tooltip"]` button
+    // children do. Selecting `.tooltip-demo` here would deterministically
+    // hover the wrong element and fail every run.
+    const tooltipTarget = page.locator('[data-bs-toggle="tooltip"], [data-toggle="tooltip"]').first();
     const hasTarget = await tooltipTarget.count() > 0;
 
     if (!hasTarget) {
-      // Try hovering over elements that commonly have tooltips
       test.skip(true, 'No tooltip targets found on page');
       return;
     }
 
-    // Hover over the tooltip target
     await tooltipTarget.hover();
 
-    // Wait for tooltip to appear
-    await page.waitForTimeout(500);
-
-    // Check for tooltip visibility
-    const tooltip = page.locator('.tooltip, [role="tooltip"], .tooltip-inner, [class*="tooltip"]');
-    const tooltipVisible = await tooltip.isVisible().catch(() => false);
-
-    if (tooltipVisible) {
-      await expect(tooltip).toBeVisible();
-    } else {
-      // Check if the element has a title attribute (native tooltip)
-      const title = await tooltipTarget.getAttribute('title');
-      expect(title).toBeTruthy();
-    }
+    // Bootstrap adds `.show` to the rendered tooltip popper once visible, and
+    // strips the trigger's `title` attribute the moment it initializes — so
+    // falling back to a `title` check here would fail even on a working
+    // tooltip. `.show` is also unambiguous, unlike a bare `.tooltip` selector
+    // which also matches the popper's arrow/inner sub-elements.
+    const tooltip = page.locator('.tooltip.show');
+    await expect(tooltip).toBeVisible();
   });
 
   test('B12 — Tooltip text content validation @regression', async ({ page }) => {
-    const tooltipTargets = page.locator('.tooltip-demo, [data-bs-toggle="tooltip"], [data-toggle="tooltip"]');
+    const tooltipTargets = page.locator('[data-bs-toggle="tooltip"], [data-toggle="tooltip"]');
     const count = await tooltipTargets.count();
 
     if (count === 0) {
@@ -57,20 +53,24 @@ test.describe('Tooltips Page @regression', () => {
 
         // Hover to trigger
         await target.hover();
-        await page.waitForTimeout(300);
 
-        // Check for rendered tooltip
-        const renderedTooltip = page.locator('.tooltip-inner, [role="tooltip"]');
-        if (await renderedTooltip.isVisible().catch(() => false)) {
-          const tooltipText = await renderedTooltip.textContent();
-          expect(tooltipText?.trim()).toBe(expectedText.trim());
-        }
+        // `.tooltip-inner` is the single element holding the rendered text —
+        // combining it with `[role="tooltip"]` (the outer popper) in one
+        // locator matches two different elements and makes `isVisible()`
+        // throw under strict mode, which the old `.catch(() => false)` was
+        // silently swallowing, skipping the assertion below on every run.
+        const renderedTooltip = page.locator('.tooltip-inner');
+        await expect(renderedTooltip).toBeVisible();
+        const tooltipText = await renderedTooltip.textContent();
+        expect(tooltipText?.trim()).toBe(expectedText.replace(/<[^>]+>/g, '').trim());
+
+        await page.mouse.move(0, 0);
       }
     }
   });
 
   test('B11 — Tooltip hides on mouse leave @regression', async ({ page }) => {
-    const tooltipTarget = page.locator('.tooltip-demo, [data-bs-toggle="tooltip"], [data-toggle="tooltip"]').first();
+    const tooltipTarget = page.locator('[data-bs-toggle="tooltip"], [data-toggle="tooltip"]').first();
     const hasTarget = await tooltipTarget.count() > 0;
 
     if (!hasTarget) {

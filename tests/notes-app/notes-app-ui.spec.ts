@@ -1,5 +1,6 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
 import { faker } from '@faker-js/faker';
+import { blockAdNetworks } from '../visual-regression/block-ads';
 
 const NOTES_API = '/notes/api';
 
@@ -46,6 +47,13 @@ test.describe('React Notes Application — UI @regression', () => {
   });
 
   const loginViaUI = async (page: any) => {
+    // The live site's ads load asynchronously and can end up overlapping
+    // the modal's submit button, which made plain page.click() calls
+    // (actionability-checked, so they wait on anything obstructing the
+    // target) hang until timeout — this showed up as R1 failing in
+    // isolation with no other CI jobs running, ruling out load/congestion.
+    await blockAdNetworks(page);
+
     // Navigate to the app origin and inject the API token into localStorage,
     // then reload — this bypasses the UI login form and avoids flakiness from
     // React routing races while still exercising the authenticated UI.
