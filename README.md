@@ -1,7 +1,7 @@
 # Playwright Web & API Automation Framework
 
-[![Playwright Tests](https://github.com/Libin-Samkutty/playwright-web-api-automation-demo/actions/workflows/playwright.yml/badge.svg)](https://github.com/Libin-Samkutty/playwright-web-api-automation-demo/actions/workflows/playwright.yml)
-[![Allure Report](https://img.shields.io/badge/Allure-Report-orange)](https://libin-samkutty.github.io/playwright-web-api-automation-demo/)
+[![Playwright Tests](https://github.com/Libin-Samkutty/playwright-web-api-automation-ts/actions/workflows/playwright.yml/badge.svg)](https://github.com/Libin-Samkutty/playwright-web-api-automation-ts/actions/workflows/playwright.yml)
+[![Allure Report](https://img.shields.io/badge/Allure-Report-orange)](https://libin-samkutty.github.io/playwright-web-api-automation-ts/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Production-grade test automation framework targeting [practice.expandtesting.com](https://practice.expandtesting.com/) — covering UI, API, network interception, browser-level APIs, and cross-layer hybrid validation.
@@ -16,7 +16,7 @@ for the legacy side of the same story.
 ## Architecture
 
 ```
-playwright-web-api-automation-demo/
+playwright-web-api-automation-ts/
 ├── .github/workflows/        # CI/CD pipeline (GitHub Actions)
 ├── src/
 │   ├── pages/                # Page Object Model classes
