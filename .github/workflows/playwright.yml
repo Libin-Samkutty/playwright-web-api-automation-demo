@@ -238,7 +238,7 @@ jobs:
           keep_reports: 20
 
       - name: Deploy report to GitHub Pages
-        if: always() && github.ref == 'refs/heads/main'
+        if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
