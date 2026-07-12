@@ -117,11 +117,18 @@ jobs:
   regression-tests:
     name: P2 Regression (Nightly)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    needs: smoke-gate
+    # Waits on critical-tests (rather than just smoke-gate) and caps
+    # concurrent shards so this job's 9-way matrix doesn't stack on top of
+    # critical-tests' own 3 concurrent sessions — all of it hits the same
+    # shared, modest-capacity public demo site, and running everything at
+    # once was the source of the CI's non-deterministic timeouts (a
+    # different test failing under load each run, never the same one twice).
+    needs: [smoke-gate, critical-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       fail-fast: false
+      max-parallel: 3
       matrix:
         browser: [chromium, firefox, webkit]
         shard: [1/3, 2/3, 3/3]
