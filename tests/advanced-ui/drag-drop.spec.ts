@@ -1,14 +1,21 @@
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // WebKit does not support synthesized drag events via mouse API for HTML5 DnD.
 // Dispatching DragEvents directly via evaluate works reliably across all browsers.
-async function htmlDragTo(page: Page, source: Locator, target: Locator) {
-  const srcBB = await source.boundingBox();
-  const tgtBB = await target.boundingBox();
+//
+// Resolving drag source/target via `elementFromPoint(x, y)` off a bounding box
+// captured in a prior round-trip is a race: if the page reflows between the
+// boundingBox() call and the evaluate() call (e.g. a lazily-loaded ad above
+// the columns shifting the layout down), the coordinates go stale and the
+// synthetic events land on the wrong element or nothing at all — this is
+// what made the test intermittently fail under CI load. Looking elements up
+// by selector inside a single evaluate() call sidesteps coordinates and
+// layout entirely.
+async function htmlDragTo(page: Page, sourceSelector: string, targetSelector: string) {
   await page.evaluate(
-    ([sx, sy, tx, ty]) => {
-      const src = document.elementFromPoint(sx, sy) as HTMLElement;
-      const tgt = document.elementFromPoint(tx, ty) as HTMLElement;
+    ([srcSel, tgtSel]) => {
+      const src = document.querySelector(srcSel) as HTMLElement | null;
+      const tgt = document.querySelector(tgtSel) as HTMLElement | null;
       const dt = new DataTransfer();
       src?.dispatchEvent(new DragEvent('dragstart', { dataTransfer: dt, bubbles: true }));
       tgt?.dispatchEvent(new DragEvent('dragenter', { dataTransfer: dt, bubbles: true }));
@@ -16,12 +23,7 @@ async function htmlDragTo(page: Page, source: Locator, target: Locator) {
       tgt?.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true }));
       src?.dispatchEvent(new DragEvent('dragend', { dataTransfer: dt, bubbles: true }));
     },
-    [
-      srcBB!.x + srcBB!.width / 2,
-      srcBB!.y + srcBB!.height / 2,
-      tgtBB!.x + tgtBB!.width / 2,
-      tgtBB!.y + tgtBB!.height / 2,
-    ]
+    [sourceSelector, targetSelector]
   );
 }
 
@@ -39,7 +41,7 @@ test.describe('Drag and Drop Page @regression', () => {
     const initialAText = await columnA.locator('header').textContent();
     const initialBText = await columnB.locator('header').textContent();
 
-    await htmlDragTo(page, columnA, columnB);
+    await htmlDragTo(page, '#column-a', '#column-b');
 
     const finalAText = await columnA.locator('header').textContent();
     const finalBText = await columnB.locator('header').textContent();
@@ -54,7 +56,7 @@ test.describe('Drag and Drop Page @regression', () => {
 
     const initialAText = await columnA.locator('header').textContent();
 
-    await htmlDragTo(page, columnA, columnB);
+    await htmlDragTo(page, '#column-a', '#column-b');
 
     await expect(columnB.locator('header')).toHaveText(initialAText!);
     await expect(columnA).toBeVisible();
@@ -68,8 +70,8 @@ test.describe('Drag and Drop Page @regression', () => {
     const originalA = await columnA.locator('header').textContent();
     const originalB = await columnB.locator('header').textContent();
 
-    await htmlDragTo(page, columnA, columnB);
-    await htmlDragTo(page, columnA, columnB);
+    await htmlDragTo(page, '#column-a', '#column-b');
+    await htmlDragTo(page, '#column-a', '#column-b');
 
     const finalA = await columnA.locator('header').textContent();
     const finalB = await columnB.locator('header').textContent();
