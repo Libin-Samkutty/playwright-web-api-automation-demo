@@ -27,6 +27,12 @@ test.describe('Typos Page — Non-Deterministic Content @regression', () => {
   });
 
   test('X2 — Both variants observed across multiple runs @extended', async ({ page }) => {
+    // 10 sequential real navigations leaves almost no margin under the
+    // default 30s test timeout — this was intermittently timing out under
+    // any concurrent CI load, not because of a locator bug but because the
+    // test's own budget was too tight for what it does by design.
+    test.slow();
+
     const observedTexts = new Set<string>();
 
     for (let i = 0; i < 10; i++) {
